@@ -20,6 +20,120 @@ struct CodexBarAccountUsageWidget: Widget {
     }
 }
 
+struct CodexBarAccountsWidget: Widget {
+    private let kind = "CodexBarAccountsWidget"
+
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(
+            kind: self.kind,
+            intent: ProviderSelectionIntent.self,
+            provider: CodexBarTimelineProvider())
+        { entry in
+            CodexBarAccountsWidgetView(entry: entry)
+        }
+        .configurationDisplayName("CodexBar Accounts")
+        .description("Usage for multiple accounts of one provider.")
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
+
+struct CodexBarAccountsWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: CodexBarWidgetEntry
+
+    var accounts: [WidgetSnapshot.AccountEntry] {
+        Self.accounts(in: self.entry.snapshot, for: self.entry.provider)
+    }
+
+    static func accounts(in snapshot: WidgetSnapshot, for provider: UsageProvider) -> [WidgetSnapshot.AccountEntry] {
+        guard snapshot.enabledProviders.contains(provider.instanceID) else { return [] }
+        return snapshot.accounts.filter { $0.provider == provider.instanceID }
+    }
+
+    var body: some View {
+        let accounts = self.accounts
+        let visibleCount = self.family == .systemLarge ? 5 : 2
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                ProviderMark(provider: self.entry.provider, isSelected: true, size: 20)
+                Text(ProviderDefaults.metadata[self.entry.provider]?.displayName
+                    ?? self.entry.provider.rawValue.capitalized)
+                    .font(.subheadline.weight(.semibold))
+                Text("Accounts")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            }
+            if accounts.isEmpty {
+                WidgetEmptyState(message: "Enable account widgets in CodexBar Settings → Menu → Widgets.")
+            } else {
+                ForEach(accounts.prefix(visibleCount)) { account in
+                    self.accountRow(account)
+                }
+                if accounts.count > visibleCount {
+                    Text("+\(accounts.count - visibleCount) more in CodexBar")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .containerBackground(.fill.tertiary, for: .widget)
+    }
+
+    private func accountRow(_ account: WidgetSnapshot.AccountEntry) -> some View {
+        let metrics = Self.metrics(for: account.usage)
+        return VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 5) {
+                Text(account.label)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                if account.isActive {
+                    Text("Active")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                if let usage = account.usage {
+                    FreshnessLabel(updatedAt: usage.updatedAt)
+                }
+            }
+            if !metrics.isEmpty {
+                HStack(spacing: 12) {
+                    ForEach(metrics) { metric in
+                        self.metric(metric)
+                    }
+                }
+            } else {
+                Text("Usage unavailable")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func metric(_ metric: WidgetUsageRow) -> some View {
+        let value = self.entry.snapshot.usageBarsShowUsed
+            ? metric.percentLeft.map { 100 - $0 }
+            : metric.percentLeft
+        return HStack(spacing: 3) {
+            Text(metric.title)
+                .foregroundStyle(.secondary)
+            Text(WidgetFormat.percent(value))
+                .fontWeight(.semibold)
+            Text(self.entry.snapshot.usageBarsShowUsed ? "used" : "left")
+                .foregroundStyle(.secondary)
+        }
+        .font(.caption2)
+    }
+
+    static func metrics(for usage: WidgetSnapshot.ProviderEntry?) -> [WidgetUsageRow] {
+        guard let usage else { return [] }
+        return Array(WidgetUsageRow.rows(for: usage).filter { $0.percentLeft != nil }.prefix(2))
+    }
+}
+
 struct AccountUsageSelectionIntent: AppIntent, WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Account Usage"
     static let description = IntentDescription("Select the provider and account to display in the widget.")

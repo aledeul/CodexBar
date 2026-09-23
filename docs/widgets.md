@@ -46,6 +46,7 @@ also lets persistence integration tests count reload attempts without calling Wi
 - **CodexBar Switcher** (`CodexBarSwitcherWidget`): static provider switcher widget, small/medium/large.
 - **CodexBar Usage** (`CodexBarUsageWidget`): configurable provider usage widget, small/medium/large.
 - **CodexBar Account Usage** (`CodexBarAccountUsageWidget`): pins one saved account’s quota windows, small/medium/large.
+- **CodexBar Accounts** (`CodexBarAccountsWidget`): shows multiple accounts for one provider, medium/large.
 - **CodexBar History** (`CodexBarHistoryWidget`): configurable usage-history chart, medium/large.
 - **CodexBar Metric** (`CodexBarCompactWidget`): compact credits/today-cost/30-day-cost widget, small only.
 - **CodexBar Burn Down** (`CodexBarBurnDownWidget`): configurable session or weekly burn-down chart, medium only.
@@ -60,6 +61,10 @@ widget and choose its **Provider** and **Account**. For example, two Account Usa
 accounts while a third widget displays Codex. The existing Usage widget sizes, bars and reset countdowns are reused.
 An Account Usage widget without an account shows setup instructions; it never follows the current account implicitly.
 Regular **CodexBar Usage** widgets continue following their configured provider as before.
+For an account overview, add **CodexBar Accounts** and choose its provider. The medium size shows two accounts;
+the large size shows up to five, with the active account marked. Each row shows the account's own snapshot age
+and up to two reported usage measures, including spend when that is the account's only limit. This widget uses
+the same account-refresh opt-in.
 
 The opt-in keeps saved token accounts and visible Codex accounts refreshing independently of the menu's segmented
 or stacked layout, using the existing six-account refresh bound. Claude-swap continues to own its own polling;

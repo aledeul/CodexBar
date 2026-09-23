@@ -231,10 +231,29 @@ extension UsageStore {
         now: Date,
         previousEntry: WidgetSnapshot.ProviderEntry?) -> WidgetSnapshot.ProviderEntry?
     {
-        let snapshot = self.snapshots[provider.instanceID]
+        // The Claude menu can be owned by claude-swap while the ambient provider probe
+        // still holds a different account's quota. Keep the widget on the same owner.
+        let swapOwnsClaude = self.settings.claudeSwapEnabled && ClaudeSwapMenuPrecedence.prefersClaudeSwap(
+            provider: provider,
+            accountCount: self.claudeSwapAccountSnapshots.count,
+            showSingleAccount: self.settings.claudeSwapShowSingleAccount)
+        let activeSwapAccount = swapOwnsClaude
+            ? self.claudeSwapAccountSnapshots.first(where: \.isActive)
+            : nil
+        let snapshot = swapOwnsClaude
+            ? activeSwapAccount?.snapshot
+            : self.snapshots[provider.instanceID]
         let tokenSnapshot = self.tokenSnapshotForCurrentProviderConfig(for: provider)?.snapshot
         let claudeQuotaOwnerKey: String? = if provider == .claude {
-            self.claudeWidgetQuotaOwnerKey()
+            if swapOwnsClaude, let activeSwapAccount,
+               let owner = ClaudeSwapRetainedUsageStore.ownershipFingerprint(for: activeSwapAccount)
+            {
+                "claude/swap:\(activeSwapAccount.id.opaqueID):\(owner)"
+            } else if swapOwnsClaude {
+                nil
+            } else {
+                self.claudeWidgetQuotaOwnerKey()
+            }
         } else {
             nil
         }

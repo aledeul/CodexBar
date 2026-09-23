@@ -82,6 +82,28 @@ struct ClaudeProviderRuntimeTests {
     }
 
     @Test
+    func `swap refresh publishes provider widgets when account widgets are disabled`() async throws {
+        let (settings, store) = self.makeStore()
+        let fixture = try self.makeVersionRecoveryExecutable(delayFirstProbe: false)
+        let metadata = try #require(ProviderRegistry.shared.metadata[.claude])
+        settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: true)
+        settings.claudeSwapExecutablePath = fixture.executablePath
+        settings.claudeSwapEnabled = true
+        #expect(!settings.accountWidgetsEnabled)
+
+        var publications: [WidgetSnapshot] = []
+        store._test_widgetSnapshotSaveOverride = { publications.append($0) }
+        defer { store._test_widgetSnapshotSaveOverride = nil }
+
+        await store.refreshClaudeSwapAccounts()
+        await store.widgetSnapshotPersistTask?.value
+
+        #expect(store.claudeSwapAccountSnapshots.count == 1)
+        #expect(publications.count == 1)
+        #expect(publications.first?.accounts.isEmpty == true)
+    }
+
+    @Test
     func `replacement refresh cannot publish a cancelled older version probe`() async throws {
         let (settings, store) = self.makeStore()
         let fixture = try self.makeVersionRecoveryExecutable(delayFirstProbe: true)
