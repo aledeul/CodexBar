@@ -90,7 +90,7 @@ struct ClaudeSwapWidgetSnapshotTests {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let active = self.account(slot: "2", active: true, used: 44, now: now)
         let inactive = self.account(slot: "1", active: false, used: 20, now: now)
-        let entries = [active, inactive].map { account in
+        let entries = [inactive, active].map { account in
             WidgetSnapshot.AccountEntry(
                 id: account.id.opaqueID,
                 provider: .claude,
@@ -136,6 +136,31 @@ struct ClaudeSwapWidgetSnapshotTests {
         let spendMetrics = CodexBarAccountsWidgetView.metrics(for: spendOnly)
         #expect(spendMetrics.first?.title == "Extra usage")
         #expect(spendMetrics.first?.percentLeft == 0)
+    }
+
+    @Test
+    func `selected account remains visible beyond medium and large row limits`() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        for count in [3, 6] {
+            let entries = (1...count).map { slot in
+                WidgetSnapshot.AccountEntry(
+                    id: String(slot),
+                    provider: .claude,
+                    label: "Account \(slot)",
+                    usage: nil,
+                    isActive: slot == count)
+            }
+            let snapshot = WidgetSnapshot(
+                entries: [],
+                accounts: entries,
+                enabledProviders: [.claude],
+                generatedAt: now)
+            let ordered = CodexBarAccountsWidgetView.accounts(in: snapshot, for: .claude)
+            #expect(ordered.count == count)
+            #expect(ordered.first?.id == String(count))
+            #expect(ordered.prefix(count == 3 ? 2 : 5).contains { $0.isActive })
+            #expect(ordered.dropFirst().map(\.id) == (1..<count).map(String.init))
+        }
     }
 
     private func usage(used: Double, now: Date) -> UsageSnapshot {

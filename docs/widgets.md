@@ -61,10 +61,18 @@ widget and choose its **Provider** and **Account**. For example, two Account Usa
 accounts while a third widget displays Codex. The existing Usage widget sizes, bars and reset countdowns are reused.
 An Account Usage widget without an account shows setup instructions; it never follows the current account implicitly.
 Regular **CodexBar Usage** widgets continue following their configured provider as before.
-For an account overview, add **CodexBar Accounts** and choose its provider. The medium size shows two accounts;
-the large size shows up to five, with the active account marked. Each row shows the account's own snapshot age
-and up to two reported usage measures, including spend when that is the account's only limit. This widget uses
-the same account-refresh opt-in.
+For an account overview, add **CodexBar Accounts** and choose its provider. The medium size shows up to two accounts;
+the large size features the active account and one inactive account. Chevron buttons page through every inactive
+account while keeping the active account fixed; they change the displayed companion, not the signed-in account.
+Accounts widgets for the same provider share that remembered companion selection.
+The medium size draws quota bars for both visible accounts. Large tiles use the same usage layout as the regular
+widget, including full-width active quota bars. A one-account Accounts tile uses that layout at either size.
+Account quota bars and Today/30d figures use only the selected account’s own data. When an account has no history,
+a large tile may show the provider’s local history chart, explicitly labeled **Combined local [provider] history**.
+That chart spans local activity across accounts; it does not change the account’s quota bars or add combined cost
+figures to its account rows. Account-owned history takes precedence when available. The current Claude account
+snapshots supply quota windows and extra usage, not account-attributed local history. This widget uses the same
+account-refresh opt-in.
 
 The opt-in keeps saved token accounts and visible Codex accounts refreshing independently of the menu's segmented
 or stacked layout, using the existing six-account refresh bound. Claude-swap continues to own its own polling;

@@ -4,12 +4,14 @@
 
 ### Added
 
+- Widgets: add an opt-in Accounts tile with the active account kept visible and controls to browse other saved accounts (#3921).
 - Atlas Cloud: show account-wide available USD balance through the documented API-key endpoint (#2714). Thanks @clairernovotny!
 - Vercel AI Gateway: show team-wide USD balance and lifetime spend through the documented API-key endpoint (#2975). Thanks @pikant!
 - DevPass: track plan credits, premium weekly usage and resets, and API-key spending through the documented LLM Gateway API (#3433). Thanks @MichelKerkmeester!
 
 ### Fixed
 
+- Claude widgets: follow the active claude-swap account after refreshes and keep account quota and cost rows scoped to their owner, with combined local history clearly labeled (#3921).
 - Claude costs: skip identical cache and report-memo writes after rescans, reducing local history disk writes (#3882).
 - Codex costs: avoid rewriting unchanged retained file state when another session or scan metadata changes, reducing local history disk writes (#3882).
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.
